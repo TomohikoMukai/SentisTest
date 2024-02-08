@@ -6,9 +6,13 @@ using System.Collections.Generic;
 
 public class TrainingDataGenerator : MonoBehaviour
 {
+    // 判定対象モデル
     [SerializeField] GameObject _target;
+    // render texture
     [SerializeField] RenderTexture _renderTexture;
+    // 生成する訓練データ数
     [SerializeField] int _numExamples;
+    // 訓練データ一式
     List<byte[]> _images = null;
     List<int> _visibility = null;
     Texture2D _tex = null;
@@ -42,6 +46,7 @@ public class TrainingDataGenerator : MonoBehaviour
         Mesh mesh = _target.GetComponent<MeshFilter>().mesh;
         Transform trs = _target.GetComponent<Transform>();
         int numVisibleVertices = 0;
+        // ビューポートにおける各頂点座標を通じてモデルの可視性を判定
         foreach (var v in mesh.vertices)
         {
             Vector3 vp = Camera.main.WorldToViewportPoint(trs.TransformPoint(v));
@@ -60,16 +65,17 @@ public class TrainingDataGenerator : MonoBehaviour
 
     bool TryAddData()
     {
+        // モデルの頂点数に対する可視頂点数の割合を計算
         float vr = VisiblityRatio();
-        if (vr < 0)
+        if (vr <= 0)
         {
             return false;
         }
+        // render textureの内容をバイト列に変換
         RenderTexture.active = _renderTexture;
         _tex.ReadPixels(new Rect(0, 0, _renderTexture.width, _renderTexture.height), 0, 0);
         _tex.Apply();
         RenderTexture.active = null;
-
         byte[] bytes = _tex.EncodeToPNG();
         _images.Add(bytes);
         _visibility.Add(Convert.ToInt32(vr > 0.9f));
@@ -84,6 +90,8 @@ public class TrainingDataGenerator : MonoBehaviour
 
     void OnApplicationQuit()
     {
+        // アプリケーション終了時に全て学習済みデータを一括してファイル出力
+
         if (_images == null || _images.Count < _numExamples)
         {
             return;
