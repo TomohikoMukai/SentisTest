@@ -36,7 +36,7 @@ public class TrainingDataGenerator : MonoBehaviour
             Vector3 p;
             p.x = UnityEngine.Random.Range(-12.0f, 12.0f);
             p.y = UnityEngine.Random.Range(-12.0f, 12.0f);
-            p.z = UnityEngine.Random.Range(-7.0f, -13.0f);
+            p.z = UnityEngine.Random.Range(-7.0f, -70.0f);
             transform.position = p;
         }
     }
@@ -45,11 +45,12 @@ public class TrainingDataGenerator : MonoBehaviour
     {
         Mesh mesh = _target.GetComponent<MeshFilter>().mesh;
         Transform trs = _target.GetComponent<Transform>();
+        Camera cam = GetComponent<Camera>();
         int numVisibleVertices = 0;
         // ビューポートにおける各頂点座標を通じてモデルの可視性を判定
         foreach (var v in mesh.vertices)
         {
-            Vector3 vp = Camera.main.WorldToViewportPoint(trs.TransformPoint(v));
+            Vector3 vp = cam.WorldToViewportPoint(trs.TransformPoint(v));
             if (vp.x > 0 && vp.x < 1
              && vp.y > 0 && vp.y < 1)
             {
@@ -67,6 +68,7 @@ public class TrainingDataGenerator : MonoBehaviour
     {
         // モデルの頂点数に対する可視頂点数の割合を計算
         float vr = VisiblityRatio();
+        Debug.Log(vr);
         if (vr <= 0)
         {
             return false;
