@@ -34,7 +34,7 @@ public class SentisDetector : MonoBehaviour
         outputTensor.Dispose();
         // 可視性判定結果：シグモイド関数の出力値の取得
         bool visible = results[0] >= 0.5f;
-        Debug.Log($"Result: {visible.ToString()}");
+        Debug.Log($"Result: {visible},  {results[0]}");// {visible.ToString()}");
     }
 
     void Update()
