@@ -10,27 +10,30 @@ public class SentisDetector : MonoBehaviour
     // ランタイムモデル
     Model _sentisRuntimeModel;
     // 推論エンジン
-    IWorker _engine;
+    Worker _engine;
 
     void Start()
     {
         // ランタイムモデルと推論エンジンの初期化
         _sentisRuntimeModel = ModelLoader.Load(_sentisModelAsset);
-        _engine = WorkerFactory.CreateWorker(BackendType.GPUCompute, _sentisRuntimeModel);
+        _engine = new Worker(_sentisRuntimeModel, BackendType.GPUPixel);
     }
 
-    public void Execute()
+    public void Inference()
     {
         // render textureを入力テンソルに変換
-        TensorFloat inputTensor = TextureConverter.ToTensor(_renderTexture);
+        using Tensor inputTensor = TextureConverter.ToTensor(
+            _renderTexture,
+            width:64,
+            height:64,
+            channels:4);
         // 推論の実行
-        _engine.Execute(inputTensor);
+        _engine.Schedule(inputTensor);
         inputTensor.Dispose();
         // 出力テンソルの取得
-        TensorFloat outputTensor = _engine.PeekOutput() as TensorFloat;
-        outputTensor.MakeReadable();
+        Tensor<float> outputTensor = _engine.PeekOutput() as Tensor<float>;
         // テンソルデータをC#配列に変換
-        float[] results = outputTensor.ToReadOnlyArray();
+        float[] results = outputTensor.DownloadToArray();
         outputTensor.Dispose();
         // 可視性判定結果：シグモイド関数の出力値の取得
         bool visible = results[0] >= 0.5f;
@@ -41,7 +44,7 @@ public class SentisDetector : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.J))
         {
-            Execute();
+            Inference();
         }
     }
 
